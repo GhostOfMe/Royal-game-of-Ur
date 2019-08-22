@@ -1,0 +1,10 @@
+[package]
+authors = ["JQ <jhanq2017@outlook.com>"]
+name = "royal_game_of_ur"
+version = "0.9.0"
+[dependencies]
+piston = "*"
+piston2d-graphics = "*"
+piston2d-opengl_graphics = "*"
+pistoncore-glutin_window = "*"
+rand = "*"
