@@ -20,7 +20,7 @@ pub struct Gameboard {
 
 impl Gameboard {
     pub fn new() -> Gameboard {
-        Gameboard {
+        let mut g = Gameboard {
         cells: [[0; 8];3],
         player_1: [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         player_2: [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -30,7 +30,10 @@ impl Gameboard {
         grid_to_path_2: HashMap::new(),
         path_to_grid_2: HashMap::new(),
         path_to_grid_1: HashMap::new(),
-        }
+        };
+        g.populate();
+        return g;
+        
     }
     
     pub fn is_player_1(&self, ind: usize) -> bool {

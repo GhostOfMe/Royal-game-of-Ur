@@ -315,6 +315,7 @@ impl GameboardView {
         
         // Draw Victory screen
         if controller.gameboard.is_finished() {
+            
             let color = if controller.gameboard.player_1[15] == 7 {self.settings.player_1_color} 
                          else {self.settings.player_2_color};
             let text = if controller.gameboard.player_1[15] == 7 {"First player"} 
@@ -326,6 +327,7 @@ impl GameboardView {
             settings.position[0]+ 60.* 1., settings.position[1] + 60.* 1.,
             settings.size_x -120., settings.size_y,
             ];
+            
             Rectangle::new(color)
            .draw(rect, &c.draw_state, c.transform, g);
            
