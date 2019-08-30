@@ -14,8 +14,6 @@ pub struct Gameboard {
     pub path_to_grid_1: HashMap<i8, (i8, i8)>,
     pub path_to_grid_2: HashMap<i8, (i8, i8)>,
     }
-    
-
 
 
 impl Gameboard {
@@ -33,7 +31,6 @@ impl Gameboard {
         };
         g.populate();
         return g;
-        
     }
     
     pub fn is_player_1(&self, ind: usize) -> bool {
