@@ -4,6 +4,7 @@ use piston::input::GenericEvent;
 
 
 use crate::Gameboard;
+use crate::gameboard::Player;
 
 pub struct GameboardController {
     pub gameboard:Gameboard,
@@ -34,22 +35,24 @@ impl GameboardController {
             if !self.gameboard.is_finished()
              && x >= 0.0 && x <= size[0] 
              && y >= 0.0 && y <= size[1] 
-             && self.gameboard.dice_roll != -1{
+             && self.gameboard.dice_roll != None {
                 let cell_x = (x / 60.) as usize;
                 let cell_y = (y / 60.) as usize;
                 println!("{}, {}", cell_x, cell_y);
-                if (self.gameboard.active_player == 0 
-                 && self.gameboard.grid_to_path_1.contains_key(&(cell_y as i8, cell_x as i8)))
-                || (self.gameboard.active_player == 1 
-                 && self.gameboard.grid_to_path_2.contains_key(&(cell_y as i8, cell_x as i8))){
-                    let cell = self.gameboard.get_active_cell(cell_y as i8, cell_x as i8);
+                
+                if match self.gameboard.active_player {
+                    Player::First => self.gameboard.grid_to_path_1.contains_key(&(cell_y as i8, cell_x as i8)),
+                    Player::Second => self.gameboard.grid_to_path_2.contains_key(&(cell_y as i8, cell_x as i8)),
+                    }
+                    {let cell = self.gameboard.get_active_cell(cell_y as i8, cell_x as i8);
                     self.gameboard._move(cell);
                 }
+                
             // Check "Roll" button clicked.
             }else if !self.gameboard.is_finished()
              && x >= 0. && x <= 60. * 2. 
              && y <= (60.* 6.) && y >= (60. *4. ) 
-             && self.gameboard.dice_roll == -1{
+             && self.gameboard.dice_roll == None {
                     self.gameboard.roll();
             }
                 // Check "Pass" button clicked.

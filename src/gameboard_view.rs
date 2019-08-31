@@ -6,6 +6,7 @@ use graphics::{Context, Graphics};
 use graphics::character::CharacterCache;
 
 use crate::GameboardController;
+use crate::gameboard::Player;
 
 
 pub struct GameboardViewSettings {
@@ -101,13 +102,31 @@ impl GameboardView {
         Rectangle::new(settings.background_color)
            .draw(board_rect, &c.draw_state, c.transform, g);
         
-        if controller.gameboard.active_player == 0 {
+        let (player_rect, player_color) = match controller.gameboard.active_player {
+            Player::First => ([
+                settings.position[0], settings.position[1],
+                settings.size_x, settings.size_y * 2.0/3.0,
+            ], settings.player_1_board_color),
+            Player::Second => ([
+                settings.position[0], settings.position[1] + 60.,
+                settings.size_x, settings.size_y * 2.0/3.0,
+            ], settings.player_2_board_color),
+            
+            };
+        
+        Rectangle::new(player_color)
+                .draw(player_rect, &c.draw_state, c.transform, g);
+        
+        
+        /*
+        if controller.gameboard.active_player == Player::First {
             let player_rect = [
                 settings.position[0], settings.position[1],
                 settings.size_x, settings.size_y * 2.0/3.0,
             ];
             Rectangle::new(settings.player_1_board_color)
                 .draw(player_rect, &c.draw_state, c.transform, g);
+        
         }else {
             let player_rect = [
                 settings.position[0], settings.position[1] + 60.,
@@ -117,7 +136,7 @@ impl GameboardView {
                 .draw(player_rect, &c.draw_state, c.transform, g);
         
         }
-        
+        */
         // Draw empty space.
         let mut black_rect = [
             settings.position[0]+settings.size_x/2.0, settings.position[1],
@@ -261,14 +280,14 @@ impl GameboardView {
         let button_color;
         let text_color;
         
-        if controller.gameboard.dice_roll == -1 {
+        if controller.gameboard.dice_roll == None {
             button_color = settings.background_color;
             text_color = settings.board_edge_color;
-            } else {
-                //text_color = [0.1, 0.1, 0.2, 1.0];
-                text_color = settings.board_edge_color;
-                button_color = [0.6, 0.6, 0.6, 1.0];
-            }
+        }else {
+            //text_color = [0.1, 0.1, 0.2, 1.0];
+            text_color = settings.board_edge_color;
+            button_color = [0.6, 0.6, 0.6, 1.0];
+        }
         
         
         Rectangle::new(button_color)
@@ -279,10 +298,10 @@ impl GameboardView {
            .draw(roll_button_rect, &c.draw_state, c.transform, g);
         
         text::Text::new_color(text_color, 60).draw("Roll",
-                                                             glyphs,
-                                                             &c.draw_state,
-                                                             c.transform.trans(16., 60.* 6.35),
-                                                             g).ok();
+                                                     glyphs,
+                                                     &c.draw_state,
+                                                     c.transform.trans(16., 60.* 6.35),
+                                                     g).ok();
         
         // "Pass" button.
         let pass_button_rect = [
@@ -305,12 +324,16 @@ impl GameboardView {
                                                      g).ok();
            
         // Draw roll result.
-        if controller.gameboard.dice_roll >=0{
-            text::Text::new_color(settings.board_edge_color, 120).draw(&format!("{}", controller.gameboard.dice_roll),
-                                                     glyphs,
-                                                     &c.draw_state,
-                                                     c.transform.trans(10.+ 60.* 3.5, 60.* 6.6),
-                                                     g).ok();
+        match controller.gameboard.dice_roll{
+            Some(x) => {text::Text::new_color(settings.board_edge_color, 120)
+                                                .draw(&format!("{}", 
+                                                controller.gameboard.dice_roll.unwrap()),
+                                             glyphs,
+                                             &c.draw_state,
+                                             c.transform.trans(10.+ 60.* 3.5, 60.* 6.6),
+                                             g).ok();},
+            None =>{},
+
         }
         
         // Draw Victory screen

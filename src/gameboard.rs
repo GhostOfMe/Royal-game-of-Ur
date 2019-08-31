@@ -2,13 +2,18 @@ use std::collections::HashMap;
 
 use rand::{self, Rng};
 
+pub enum Player{
+    First,
+    Second,
+}
+
 /// Stores board information
 pub struct Gameboard {
     pub cells: [[u8; 8]; 3],
     pub player_1: [i8; 16],
     pub player_2: [i8; 16],
-    pub active_player: i8,
-    pub dice_roll: i8,
+    pub active_player: Player,
+    pub dice_roll: Option<i8>,
     pub grid_to_path_1: HashMap<(i8, i8), i8>,
     pub grid_to_path_2: HashMap<(i8, i8), i8>,
     pub path_to_grid_1: HashMap<i8, (i8, i8)>,
@@ -22,8 +27,8 @@ impl Gameboard {
         cells: [[0; 8];3],
         player_1: [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         player_2: [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        active_player: 0,
-        dice_roll: -1,
+        active_player: Player::First,
+        dice_roll: None,
         grid_to_path_1: HashMap::new(),
         grid_to_path_2: HashMap::new(),
         path_to_grid_2: HashMap::new(),
@@ -32,7 +37,7 @@ impl Gameboard {
         g.populate();
         return g;
     }
-    
+    /*
     pub fn is_player_1(&self, ind: usize) -> bool {
         return self.player_1[ind] == 1;
     }
@@ -40,7 +45,7 @@ impl Gameboard {
     pub fn is_player_2(&self, ind: usize) -> bool {
         return self.player_2[ind] == 1;
     }
-    
+    */
     pub fn roll(&mut self){
         //roll d2 x 4
         let mut rng = rand::thread_rng();
@@ -52,64 +57,49 @@ impl Gameboard {
             result +=  num;
             }
         
-        self.dice_roll = result;
+        self.dice_roll = Some(result);
         //Pass turn if roll is 0.
-        if self.dice_roll == 0{
-            self.pass_turn();
-        }
-        println!("Total: {}", self.dice_roll);
+
+        println!("Total: {}", self.dice_roll.unwrap());
     }
     
-    pub fn _move(&mut self, _i: usize) {
-        if self.active_player == 0 
-         // Check array boundary.
-         && (_i + self.dice_roll as usize) <16
-         // Check destination cell is free.
-         && (self.player_1[_i+self.dice_roll as usize] != 1 
-            ||_i + self.dice_roll as usize == 15)
-            
-         // Check target cell has checker.
-         && self.player_1[_i] > 0 {
-            self.player_1[_i] -= 1;
-            self.player_1[_i+self.dice_roll as usize] += 1;
-            
-            // knock out check
-            if self.player_2[_i+self.dice_roll as usize] == 1 
-                            && (_i+self.dice_roll as usize) > 4
-                            && (_i+self.dice_roll as usize) < 13 {
-                self.player_2[_i+self.dice_roll as usize] = 0;
-                self.player_2[0] +=1;
-            }
-            self.pass_turn();
+    pub fn _move(&mut self, i: usize) {
+        let (p1, p2) : (&mut[i8; 16], &mut[i8; 16]) = match self.active_player {
+            Player::First =>  (&mut self.player_1, &mut self.player_2),
+            Player::Second => (&mut self.player_2, &mut self.player_1),
+        };
         
-        }else if self.active_player == 1  
-              && (_i + self.dice_roll as usize) < 16
-         // Check destination cell is free.
-              && (self.player_2[_i+self.dice_roll as usize] != 1 
-                ||_i + self.dice_roll as usize == 15)
-              && self.player_2[_i] > 0 {
-            self.player_2[_i] -= 1;
-            self.player_2[_i+self.dice_roll as usize] += 1;
-            
-            if self.player_1[_i+self.dice_roll as usize] == 1 
-                             && (_i+self.dice_roll as usize) > 4
-                             && (_i+self.dice_roll as usize) < 13 {
-                self.player_1[_i+self.dice_roll as usize] = 0;
-                self.player_1[0] +=1;
+        let tmp_roll = self.dice_roll.unwrap() as usize;
+        
+        if Gameboard::move_is_valid(&*p1, i, tmp_roll) {
+
+            // Move checker
+            p1[i] -= 1;
+            p1[i+tmp_roll] += 1;
+            // Knock out?
+            if p2[i+tmp_roll] == 1
+              && (i+tmp_roll) > 4
+              && (i+tmp_roll) < 13 {
+                p2[i+tmp_roll] = 0;
+                p2[0] += 1; 
             }
+            
             self.pass_turn();
         }
+    }
+    
+    fn move_is_valid(array: &[i8; 16], cell_id: usize, dice_roll: usize) -> bool {
+        return (cell_id + dice_roll) < 16 
+             && (array[cell_id + dice_roll] != 1 || cell_id + dice_roll == 15)
+             && array[cell_id] >= 1
+             && dice_roll > 0;
     }
     
     pub fn pass_turn(&mut self) {
-        self.dice_roll = -1;
-        println!("{}", self.dice_roll);
-        if self.active_player == 0 {
-            self.active_player = 1;
-            println!{"Second player's turn."};
-        } else {
-            self.active_player = 0;
-            println!{"First player's turn."};
+        self.dice_roll = None;
+         match self. active_player{
+            Player::First => self.active_player = Player::Second,
+            Player::Second => self.active_player = Player::First,
         }
     }
     
@@ -119,10 +109,9 @@ impl Gameboard {
     
     
     pub fn get_active_cell(&self, x: i8, y: i8) -> usize{
-        if self.active_player == 0 {
-            return self.grid_to_path_1[&(x, y)] as usize;
-        }else {
-            return self.grid_to_path_2[&(x, y)] as usize;
+        match self.active_player{
+            Player::First => self.grid_to_path_1[&(x, y)] as usize,
+            Player::Second => self.grid_to_path_2[&(x, y)] as usize,
         }
     }
     
